@@ -3,12 +3,13 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body; 
+  // FUNCIONA
+  const { email, password } = req.body;
 
   try {
     // 1. Buscar verificador por email
     const [verificador] = await db.query(
-      "SELECT * FROM verificador WHERE email = ?", 
+      "SELECT * FROM verificador WHERE email = ?",
       [email]
     );
 
@@ -25,18 +26,13 @@ exports.login = async (req, res) => {
     }
 
     // 3. Generar token JWT
-    const token = jwt.sign(
-      { id: user.id_verificador }, 
-      process.env.JWT_SECRET,
-      { expiresIn: "2h" }
-    );
+    const token = jwt.sign({ id: user.id_verificador }, process.env.JWT_SECRET);
 
-    res.json({ 
+    res.json({
       ok: true,
       token,
-      isValidator: true // Todos los verificadores son válidos por defecto
+      isValidator: true, // Todos los verificadores son válidos por defecto
     });
-
   } catch (err) {
     console.error("Error en login:", err);
     res.status(500).json({ error: "Error del servidor" });
@@ -44,46 +40,33 @@ exports.login = async (req, res) => {
 };
 
 exports.registrarVerificador = async (req, res) => {
-  const {
-    entidad,
-    cif,
-    apellidos,
-    nombre,
-    DNI,
-    movil,
-    email,
-    password 
-  } = req.body;
-
+  // FUNCIONA
   try {
-    // Validar campos obligatorios
-    if (!entidad || !cif || !apellidos || !nombre || !DNI || !movil || !email || !password) {
-      return res.status(400).json({ error: "Todos los campos son obligatorios" });
+    const { entidad, cif, apellidos, nombre, DNI, movil, email, contraseña } =
+      req.body;
+
+    if (!entidad || !apellidos || !nombre || !DNI || !contraseña) {
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // Verificar si el email ya existe
-    const [existingUser] = await db.query(
-      "SELECT email FROM verificador WHERE email = ?",
-      [email]
-    );
+    const hashedPassword = bcrypt.hashSync(contraseña, 10);
 
-    if (existingUser.length > 0) {
-      return res.status(409).json({ error: "El email ya está registrado" });
-    }
-
-    // Hashear la contraseña
-    const hashedPassword = bcrypt.hashSync(password, 10); 
-
-    // Insertar nuevo verificador
-    await db.query(
-      "INSERT INTO verificador (entidad, cif, apellidos, nombre, DNI, movil, email, contraseña) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+    const [result] = await db.query(
+      "INSERT INTO verificador (entidad, cif, apellidos, nombre, DNI, movil, email, contraseña) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [entidad, cif, apellidos, nombre, DNI, movil, email, hashedPassword]
     );
+    // Generar token SIN expiración
+    const token = jwt.sign(
+      { id_verificador: result.insertId, nombre, email },
+      process.env.JWT_SECRET
+    );
 
-    res.status(201).json({ message: "Verificador registrado exitosamente" });
-
+    res.status(201).json({
+      message: "Verificador creado",
+      id_verificador: result.insertId,
+      token, // Enviamos el token generado
+    });
   } catch (err) {
-    console.error("Error en registro:", err);
-    res.status(500).json({ error: "Error del servidor" });
+    res.status(500).json({ error: "Error en la BD" });
   }
 };

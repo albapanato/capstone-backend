@@ -1,64 +1,180 @@
 const db = require("../models/db");
 
+//   console.log("--casoController.js backend----req.body------>", req.body);
+//   // estamos aquii
+//   try {
+//     console.log("Datos recibidos en el backend:", req.body); // 🔍 Depuración
+
+//     const {
+//       nombre_caso,
+//       fecha,
+//       hora,
+//       descripcion_caso,
+//       fk_verificador = 0, // Valor por defecto: 0
+//       fk_testigo,
+//       fk_victima,
+//       fk_fuente_documental,
+//       nombre_ubicacion,
+//       coordenadas,
+//       descripcion_coordenadas,
+//       valoracion_daños,
+//     } = req.body;
+
+//     // Validar campos obligatorios
+//     const camposObligatorios = [
+//       { campo: "nombre_caso", valor: nombre_caso },
+//       { campo: "nombre_ubicacion", valor: nombre_ubicacion },
+//       { campo: "coordenadas", valor: coordenadas },
+//     ];
+
+//     const faltantes = camposObligatorios.filter(
+//       (c) => c.valor === undefined || c.valor === null || c.valor === ""
+//     );
+
+//     if (faltantes.length > 0) {
+//       return res.status(400).json({
+//         error: "Faltan campos obligatorios",
+//         campos_faltantes: faltantes.map((f) => f.campo),
+//       });
+//     }
+
+//     // Validar formato de coordenadas
+//     if (!coordenadas.includes(",")) {
+//       return res.status(400).json({
+//         error: "Formato de coordenadas inválido. Use 'latitud, longitud'",
+//       });
+//     }
+
+//     // Verificar existencia de registros relacionados
+//     const [testigoExiste, victimaExiste, fuenteExiste] = await Promise.all([
+//       verificarExistencia("testigo", fk_testigo),
+//       verificarExistencia("victima", fk_victima),
+//       verificarExistencia("fuente_documental", fk_fuente_documental),
+//     ]);
+
+//     if (!testigoExiste || !victimaExiste || !fuenteExiste) {
+//       return res
+//         .status(404)
+//         .json({ error: "Registros relacionados no encontrados" });
+//     }
+
+//     // Insertar el caso en la BD
+//     const [result] = await db.query(
+//       `INSERT INTO caso (
+//         nombre_caso,
+//         fecha,
+//         hora,
+//         descripcion_caso,
+//         fk_verificador,
+//         fk_testigo,
+//         fk_victima,
+//         fk_fuente_documental,
+//         nombre_ubicacion,
+//         coordenadas,
+//         descripcion_coordenadas,
+//         valoracion_daños
+//       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+
+//       [
+//         nombre_caso,
+//         fecha || null,
+//         hora || null,
+//         descripcion_caso || null,
+//         fk_verificador, // Aquí se usa 0 por defecto
+//         fk_testigo,
+//         fk_victima,
+//         fk_fuente_documental,
+//         nombre_ubicacion,
+//         coordenadas,
+//         descripcion_coordenadas || null,
+//         valoracion_daños || null,
+//       ]
+//     );
+
+//     res.status(201).json({
+//       message: "Caso creado exitosamente",
+//       id_caso: result.insertId,
+//     });
+//   } catch (err) {
+//     console.error("❌ Error al crear caso:", err);
+//     res.status(500).json({ error: "Error en la base de datos" });
+//   }
+// };
+
 exports.crearCaso = async (req, res) => {
+  // funciona
+  console.log("--casoController.js backend----req.body------>", req.body);
+
   try {
     console.log("Datos recibidos en el backend:", req.body); // 🔍 Depuración
 
-    const {
+    let {
       nombre_caso,
       fecha,
       hora,
       descripcion_caso,
-      fk_verificador = 0, // Valor por defecto: 0
+      fk_verificador,
       fk_testigo,
       fk_victima,
       fk_fuente_documental,
       nombre_ubicacion,
       coordenadas,
-      descripcion,
-      valoracion_daños
+      descripcion_coordenadas,
+      valoracion_daños,
     } = req.body;
 
-    // Validar campos obligatorios
+    // ✅ Asignar valores por defecto si no existen
+    fk_verificador = fk_verificador || null;
+    fk_testigo = fk_testigo || null;
+    fk_victima = fk_victima || null;
+    fk_fuente_documental = fk_fuente_documental || null;
+
+    // ✅ Validar campos obligatorios (sin incluir claves foráneas opcionales)
     const camposObligatorios = [
       { campo: "nombre_caso", valor: nombre_caso },
-      { campo: "fk_testigo", valor: fk_testigo },
-      { campo: "fk_victima", valor: fk_victima },
-      { campo: "fk_fuente_documental", valor: fk_fuente_documental },
       { campo: "nombre_ubicacion", valor: nombre_ubicacion },
-      { campo: "coordenadas", valor: coordenadas }
+      { campo: "coordenadas", valor: coordenadas },
     ];
 
-    const faltantes = camposObligatorios.filter(c => c.valor === undefined || c.valor === null || c.valor === "");
+    const faltantes = camposObligatorios.filter(
+      (c) => !c.valor || c.valor === ""
+    );
 
     if (faltantes.length > 0) {
       return res.status(400).json({
         error: "Faltan campos obligatorios",
-        campos_faltantes: faltantes.map(f => f.campo)
+        campos_faltantes: faltantes.map((f) => f.campo),
       });
     }
 
-    // Validar formato de coordenadas
-    if (!coordenadas.includes(",")) {
-      return res.status(400).json({ error: "Formato de coordenadas inválido. Use 'latitud, longitud'" });
+    // ✅ Validar formato de coordenadas si existen
+    if (coordenadas && !coordenadas.includes(",")) {
+      return res.status(400).json({
+        error: "Formato de coordenadas inválido. Use 'latitud,longitud'",
+      });
     }
 
-    // Verificar existencia de registros relacionados
-    const [
-      testigoExiste,
-      victimaExiste,
-      fuenteExiste
-    ] = await Promise.all([
-      verificarExistencia('testigo', fk_testigo),
-      verificarExistencia('victima', fk_victima),
-      verificarExistencia('fuente_documental', fk_fuente_documental)
-    ]);
+    // ✅ Verificar existencia de registros relacionados (si no son null)
+    const verificaciones = [];
+    if (fk_testigo)
+      verificaciones.push(verificarExistencia("testigo", fk_testigo));
+    if (fk_victima)
+      verificaciones.push(verificarExistencia("victima", fk_victima));
+    if (fk_fuente_documental)
+      verificaciones.push(
+        verificarExistencia("fuente_documental", fk_fuente_documental)
+      );
 
-    if (!testigoExiste || !victimaExiste || !fuenteExiste) {
-      return res.status(404).json({ error: "Registros relacionados no encontrados" });
+    if (verificaciones.length > 0) {
+      const resultados = await Promise.all(verificaciones);
+      if (resultados.includes(false)) {
+        return res
+          .status(404)
+          .json({ error: "Registros relacionados no encontrados" });
+      }
     }
 
-    // Insertar el caso en la BD
+    // ✅ Insertar el caso en la BD
     const [result] = await db.query(
       `INSERT INTO caso (
         nombre_caso, 
@@ -71,46 +187,49 @@ exports.crearCaso = async (req, res) => {
         fk_fuente_documental, 
         nombre_ubicacion, 
         coordenadas, 
-        descripcion, 
+        descripcion_coordenadas, 
         valoracion_daños
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-
       [
         nombre_caso,
         fecha || null,
         hora || null,
         descripcion_caso || null,
-        fk_verificador, // Aquí se usa 0 por defecto
+        fk_verificador,
         fk_testigo,
         fk_victima,
         fk_fuente_documental,
         nombre_ubicacion,
         coordenadas,
-        descripcion || null,
-        valoracion_daños || null
+        descripcion_coordenadas || null,
+        valoracion_daños || null,
       ]
     );
 
     res.status(201).json({
       message: "Caso creado exitosamente",
-      id_caso: result.insertId
+      id_caso: result.insertId,
     });
-
   } catch (err) {
     console.error("❌ Error al crear caso:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
 
-exports.obtenerCasosVerificados = async (req, res) => {
+//funciona
+exports.obtenerCasosSinVerificar = async (req, res) => {
   try {
     console.log("🔍 Ejecutando consulta de casos verificados...");
 
-    const [casos] = await db.query("SELECT * FROM caso WHERE fk_verificador > 0;");
+    const [casos] = await db.query(
+      "SELECT * FROM caso WHERE fk_verificador IS NULL;"
+    );
 
     if (casos.length === 0) {
       console.log("⚠️ No se encontraron casos verificados.");
-      return res.status(404).json({ error: "No se encontraron casos verificados" });
+      return res
+        .status(404)
+        .json({ error: "No se encontraron casos verificados" });
     }
 
     console.log("✅ Casos encontrados:", casos);
@@ -121,7 +240,7 @@ exports.obtenerCasosVerificados = async (req, res) => {
   }
 };
 
-
+//funciona
 exports.obtenerCasoPorId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -138,6 +257,7 @@ exports.obtenerCasoPorId = async (req, res) => {
   }
 };
 
+//funciona
 exports.obtenerTodosCasos = async (req, res) => {
   try {
     const [casos] = await db.query("SELECT * FROM caso");
@@ -147,9 +267,33 @@ exports.obtenerTodosCasos = async (req, res) => {
   }
 };
 
-exports.obtenerCasosVerificados = async (req, res) => {
+exports.obtenerCasosVerificadosDeUnVerificador = async (req, res) => {
   try {
-    const [casos] = await db.query("SELECT * FROM caso WHERE validado = 1");
+    const { id_verificador } = req.params; // 🟢 Obtenemos el ID desde la URL
+
+    if (!id_verificador) {
+      return res
+        .status(400)
+        .json({ error: "El ID del verificador es requerido" });
+    }
+
+    const [casos] = await db.query(
+      "SELECT * FROM caso WHERE fk_verificador = ?",
+      [id_verificador]
+    );
+
+    res.json(casos);
+  } catch (err) {
+    console.error("❌ Error en obtenerCasosVerificadosDeUnVerificador:", err);
+    res.status(500).json({ error: "Error en la BD" });
+  }
+};
+
+exports.obtenerTodosLosCasosVerificados = async (req, res) => {
+  try {
+    const [casos] = await db.query(
+      "SELECT * FROM caso WHERE fk_verificador IS NOT NULL;"
+    );
     res.json(casos);
   } catch (err) {
     res.status(500).json({ error: "Error en la BD" });
@@ -170,18 +314,20 @@ exports.actualizarCaso = async (req, res) => {
       fk_fuente_documental,
       nombre_ubicacion,
       coordenadas,
-      descripcion,
+      descripcion_coordenadas,
       valoracion_daños,
     } = req.body;
 
     // Validar coordenadas
     if (!coordenadas || !coordenadas.includes(",")) {
-      return res.status(400).json({ error: "Formato de coordenadas inválido. Use 'latitud, longitud'" });
+      return res.status(400).json({
+        error: "Formato de coordenadas inválido. Use 'latitud, longitud'",
+      });
     }
 
     // Actualizar el caso
     await db.query(
-      "UPDATE caso SET nombre_caso = ?, fecha = ?, hora = ?, descripcion_caso = ?, fk_verificador = ?, fk_testigo = ?, fk_victima = ?, fk_fuente_documental = ?, nombre_ubicacion = ?, coordenadas = ?, descripcion = ?, valoracion_daños = ? WHERE id_caso = ?",
+      "UPDATE caso SET nombre_caso = ?, fecha = ?, hora = ?, descripcion_caso = ?, fk_verificador = ?, fk_testigo = ?, fk_victima = ?, fk_fuente_documental = ?, nombre_ubicacion = ?, coordenadas = ?, descripcion_coordenadas = ?, valoracion_daños = ? WHERE id_caso = ?",
       [
         nombre_caso,
         fecha,
@@ -193,7 +339,7 @@ exports.actualizarCaso = async (req, res) => {
         fk_fuente_documental,
         nombre_ubicacion,
         coordenadas,
-        descripcion,
+        descripcion_coordenadas,
         valoracion_daños,
         id,
       ]

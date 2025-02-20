@@ -9,7 +9,6 @@ const {
   eliminarVerificador,
 } = require("../controllers/verificadorController");
 
-router.post("/", verificarToken, crearVerificador);
 router.get("/", verificarToken, obtenerVerificadores);
 router.get("/:id", verificarToken, obtenerVerificadorPorId);
 router.put("/:id", verificarToken, actualizarVerificador);
