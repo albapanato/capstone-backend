@@ -29,6 +29,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign({ id: user.id_verificador }, process.env.JWT_SECRET);
 
     res.json({
+      id: user.id_verificador,
       ok: true,
       token,
       isValidator: true, // Todos los verificadores son válidos por defecto
@@ -60,7 +61,6 @@ exports.registrarVerificador = async (req, res) => {
       { id_verificador: result.insertId, nombre, email },
       process.env.JWT_SECRET
     );
-
     res.status(201).json({
       message: "Verificador creado",
       id_verificador: result.insertId,

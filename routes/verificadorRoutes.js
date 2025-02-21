@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const verificarToken = require("../middlewares/authMiddleware");
 const {
-  crearVerificador,
   obtenerVerificadores,
   obtenerVerificadorPorId,
   actualizarVerificador,
@@ -10,7 +9,7 @@ const {
 } = require("../controllers/verificadorController");
 
 router.get("/", verificarToken, obtenerVerificadores);
-router.get("/:id", verificarToken, obtenerVerificadorPorId);
+router.get("/:id", obtenerVerificadorPorId);
 router.put("/:id", verificarToken, actualizarVerificador);
 router.delete("/:id", verificarToken, eliminarVerificador);
 

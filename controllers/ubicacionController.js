@@ -16,7 +16,9 @@ exports.crearUbicacion = async (req, res) => {
       [nombre, latitud, longitud, descripcion]
     );
 
-    res.status(201).json({ message: "Ubicación creada", id_ubicacion: result.insertId });
+    res
+      .status(201)
+      .json({ message: "Ubicación creada", id_ubicacion: result.insertId });
   } catch (err) {
     console.error("Error al crear ubicación:", err);
     res.status(500).json({ error: "Error en la base de datos" });
@@ -39,7 +41,10 @@ exports.obtenerUbicacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [ubicacion] = await db.query("SELECT * FROM ubicacion WHERE id_ubicacion = ?", [id]);
+    const [ubicacion] = await db.query(
+      "SELECT * FROM ubicacion WHERE id_ubicacion = ?",
+      [id]
+    );
 
     if (ubicacion.length === 0) {
       return res.status(404).json({ error: "Ubicación no encontrada" });
@@ -59,7 +64,10 @@ exports.actualizarUbicacion = async (req, res) => {
     const { nombre, latitud, longitud, descripcion } = req.body;
 
     // Verificar si la ubicación existe
-    const [ubicacion] = await db.query("SELECT * FROM ubicacion WHERE id_ubicacion = ?", [id]);
+    const [ubicacion] = await db.query(
+      "SELECT * FROM ubicacion WHERE id_ubicacion = ?",
+      [id]
+    );
     if (ubicacion.length === 0) {
       return res.status(404).json({ error: "Ubicación no encontrada" });
     }
@@ -83,7 +91,10 @@ exports.eliminarUbicacion = async (req, res) => {
     const { id } = req.params;
 
     // Verificar si la ubicación existe
-    const [ubicacion] = await db.query("SELECT * FROM ubicacion WHERE id_ubicacion = ?", [id]);
+    const [ubicacion] = await db.query(
+      "SELECT * FROM ubicacion WHERE id_ubicacion = ?",
+      [id]
+    );
     if (ubicacion.length === 0) {
       return res.status(404).json({ error: "Ubicación no encontrada" });
     }

@@ -10,9 +10,9 @@ const {
   eliminarTestigo,
 } = require("../controllers/testigoController");
 
-router.post("/", verificarToken, crearTestigo);
-router.get("/", verificarToken, obtenerTestigos);
-router.get("/:id", verificarToken, obtenerTestigoPorId);
+router.post("/", crearTestigo);
+router.get("/", obtenerTestigos);
+router.get("/:id", obtenerTestigoPorId);
 router.put("/:id", verificarToken, actualizarTestigo);
 router.delete("/:id", verificarToken, eliminarTestigo);
 

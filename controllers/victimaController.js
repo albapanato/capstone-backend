@@ -2,7 +2,8 @@ const db = require("../models/db");
 
 exports.crearVictima = async (req, res) => {
   try {
-    const { estado, apellidos, nombre, DNI, sexo, telefono, movil, email } = req.body;
+    const { estado, apellidos, nombre, DNI, sexo, telefono, movil, email } =
+      req.body;
 
     if (!estado || !apellidos || !nombre || !DNI || !sexo) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
@@ -13,7 +14,11 @@ exports.crearVictima = async (req, res) => {
       [estado, apellidos, nombre, DNI, sexo, telefono, movil, email]
     );
 
-    res.status(201).json({ message: "Víctima creada", id_victima: result.insertId });
+    res.status(201).json({
+      message: "Víctima creada",
+      id_victima: result.insertId,
+      ok: true,
+    });
   } catch (err) {
     res.status(500).json({ error: "Error en la BD" });
   }
@@ -34,7 +39,10 @@ exports.obtenerVictimaPorId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [victima] = await db.query("SELECT * FROM victima WHERE id_victima = ?", [id]);
+    const [victima] = await db.query(
+      "SELECT * FROM victima WHERE id_victima = ?",
+      [id]
+    );
 
     if (victima.length === 0) {
       return res.status(404).json({ error: "Víctima no encontrada" });
@@ -51,10 +59,14 @@ exports.obtenerVictimaPorId = async (req, res) => {
 exports.actualizarVictima = async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado, apellidos, nombre, DNI, sexo, telefono, movil, email } = req.body;
+    const { estado, apellidos, nombre, DNI, sexo, telefono, movil, email } =
+      req.body;
 
     // Verificar si la víctima existe
-    const [victima] = await db.query("SELECT * FROM victima WHERE id_victima = ?", [id]);
+    const [victima] = await db.query(
+      "SELECT * FROM victima WHERE id_victima = ?",
+      [id]
+    );
     if (victima.length === 0) {
       return res.status(404).json({ error: "Víctima no encontrada" });
     }
@@ -78,7 +90,10 @@ exports.eliminarVictima = async (req, res) => {
     const { id } = req.params;
 
     // Verificar si la víctima existe
-    const [victima] = await db.query("SELECT * FROM victima WHERE id_victima = ?", [id]);
+    const [victima] = await db.query(
+      "SELECT * FROM victima WHERE id_victima = ?",
+      [id]
+    );
     if (victima.length === 0) {
       return res.status(404).json({ error: "Víctima no encontrada" });
     }

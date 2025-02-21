@@ -9,10 +9,10 @@ const {
   eliminarFuente,
 } = require("../controllers/fuenteController");
 
-router.post("/", verificarToken, crearFuente);
-router.get("/", verificarToken, obtenerFuentes);
-router.get("/:id", verificarToken, obtenerFuentePorId);
-router.put("/:id", verificarToken, actualizarFuente);
-router.delete("/:id", verificarToken, eliminarFuente);
+router.post("/", crearFuente);
+router.get("/", obtenerFuentes);
+router.get("/:id", obtenerFuentePorId); // Integrar lógica de verificarToken mas tarde
+router.put("/:id", actualizarFuente); // Integrar lógica de verificarToken mas tarde
+router.delete("/:id", eliminarFuente); // Integrar lógica de verificarToken mas tarde
 
 module.exports = router;

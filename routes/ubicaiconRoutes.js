@@ -17,13 +17,3 @@ router.put("/:id", verificarToken, actualizarUbicacion); // Actualizar una ubica
 router.delete("/:id", verificarToken, eliminarUbicacion); // Eliminar una ubicación por ID
 
 module.exports = router;
-
-
-
-
-
-
-
-
-
-

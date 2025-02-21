@@ -25,6 +25,6 @@ app.use("/api/fuentes", fuenteRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Servidor corriendo en http://0.0.0.0:${PORT}`);
 });

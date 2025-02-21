@@ -8,6 +8,7 @@ const {
   obtenerCasosVerificadosDeUnVerificador,
   obtenerTodosCasos,
   obtenerTodosLosCasosVerificados,
+  validarCaso,
   obtenerCasoPorId,
   actualizarCaso,
 } = require("../controllers/casoController");
@@ -22,5 +23,6 @@ router.get(
 router.get("/verificados", obtenerTodosLosCasosVerificados); //funciona
 router.get("/all", obtenerTodosCasos); //funciona
 router.get("/:id", obtenerCasoPorId); //funciona
-router.put("/:id", actualizarCaso); // funciona
+router.put("/validar/:id", verificarToken, validarCaso);
+router.put("/:id", verificarToken, actualizarCaso); // funciona -- no esta la funcionalidad en el front
 module.exports = router;

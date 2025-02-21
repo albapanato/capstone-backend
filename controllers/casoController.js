@@ -2,11 +2,8 @@ const db = require("../models/db");
 
 exports.crearCaso = async (req, res) => {
   // funciona
-  console.log("--casoController.js backend----req.body------>", req.body);
 
   try {
-    console.log("Datos recibidos en el backend:", req.body); // 🔍 Depuración
-
     let {
       nombre_caso,
       fecha,
@@ -118,20 +115,16 @@ exports.crearCaso = async (req, res) => {
 //funciona
 exports.obtenerCasosSinVerificar = async (req, res) => {
   try {
-    console.log("🔍 Ejecutando consulta de casos verificados...");
-
     const [casos] = await db.query(
       "SELECT * FROM caso WHERE fk_verificador IS NULL;"
     );
 
     if (casos.length === 0) {
-      console.log("⚠️ No se encontraron casos verificados.");
       return res
         .status(404)
         .json({ error: "No se encontraron casos verificados" });
     }
 
-    console.log("✅ Casos encontrados:", casos);
     res.json(casos);
   } catch (err) {
     console.error("❌ Error en la consulta de casos verificados:", err);
@@ -196,6 +189,28 @@ exports.obtenerTodosLosCasosVerificados = async (req, res) => {
     res.json(casos);
   } catch (err) {
     res.status(500).json({ error: "Error en la BD" });
+  }
+};
+
+exports.validarCaso = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fk_verificador, validar } = req.body;
+    if (validar) {
+      await db.query("UPDATE caso SET fk_verificador = ? WHERE id_caso = ?", [
+        fk_verificador,
+        id,
+      ]);
+      res.status(200).json({ message: "Caso validado", ok: true });
+      return;
+    }
+    await db.query("UPDATE caso SET fk_verificador = NULL WHERE id_caso = ?", [
+      id,
+    ]);
+    res.status(200).json({ message: "Caso invalidado", ok: true });
+  } catch (err) {
+    console.error("Error al actualizar caso:", err);
+    res.status(500).json({ error: "Error en la base de datos" });
   }
 };
 

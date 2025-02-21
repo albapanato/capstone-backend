@@ -34,9 +34,11 @@ exports.crearTestigo = async (req, res) => {
       ]
     );
 
-    res
-      .status(201)
-      .json({ message: "Testigo creado", id_testigo: result.insertId });
+    res.status(201).json({
+      message: "Testigo creado",
+      id_testigo: result.insertId,
+      ok: true,
+    });
   } catch (err) {
     res.status(500).json({ error: "Error en la BD" });
   }
@@ -92,7 +94,7 @@ exports.actualizarTestigo = (req, res) => {
     ],
     (err, result) => {
       if (err) return res.status(500).json({ error: "Error en la BD" });
-      res.status(202).json({ message: "Testigo actualizado" });
+      res.status(202).json({ message: "Testigo actualizado", ok: true });
     }
   );
 };
@@ -101,6 +103,6 @@ exports.eliminarTestigo = (req, res) => {
   const id = req.params.id;
   db.query("DELETE FROM testigo WHERE id_testigo = ?", [id], (err, result) => {
     if (err) return res.status(500).json({ error: "Error en la BD" });
-    res.status(202).json({ message: "Testigo eliminado" });
+    res.status(202).json({ message: "Testigo eliminado", ok: true });
   });
 };
