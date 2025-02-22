@@ -3,14 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
-// Middleware de timeout (se coloca antes de definir rutas)
-app.use((req, res, next) => {
-  res.setTimeout(100000, () => {
-    // 100 segundos
-    res.status(504).json({ error: "Request timeout" });
-  });
-  next();
-});
+// // Middleware de timeout (se coloca antes de definir rutas)
+// app.use((req, res, next) => {
+//   res.setTimeout(100000, () => {
+//     // 100 segundos
+//     res.status(504).json({ error: "Request timeout" });
+//   });
+//   next();
+// });
 
 // Middlewares generales
 app.use(cors());
@@ -38,7 +38,8 @@ app.use((req, res) => {
 });
 
 // Puerto
-const PORT = process.env.PORT || 5002;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Servidor corriendo en http://0.0.0.0:${PORT}`);
+app.get("/", (req, res) => {
+  res.send("API funcionando en Vercel 🚀");
 });
+
+module.exports = app;
