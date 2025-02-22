@@ -1,4 +1,4 @@
-const db = require("../models/db");
+const { supabase } = require("../models/db");
 
 // 1. Crear una nueva ubicación
 exports.crearUbicacion = async (req, res) => {
@@ -10,17 +10,20 @@ exports.crearUbicacion = async (req, res) => {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // Insertar la ubicación en la base de datos
-    const [result] = await db.query(
-      "INSERT INTO ubicacion (nombre, latitud, longitud, descripcion) VALUES (?, ?, ?, ?)",
-      [nombre, latitud, longitud, descripcion]
-    );
+    // Insertar ubicación en Supabase
+    const { data, error } = await supabase
+      .from("ubicacion")
+      .insert([{ nombre, latitud, longitud, descripcion }])
+      .select("id_ubicacion");
 
-    res
-      .status(201)
-      .json({ message: "Ubicación creada", id_ubicacion: result.insertId });
+    if (error) throw error;
+
+    res.status(201).json({
+      message: "Ubicación creada",
+      id_ubicacion: data[0].id_ubicacion,
+    });
   } catch (err) {
-    console.error("Error al crear ubicación:", err);
+    console.error("❌ Error al crear ubicación:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -28,10 +31,12 @@ exports.crearUbicacion = async (req, res) => {
 // 2. Obtener todas las ubicaciones
 exports.obtenerUbicaciones = async (req, res) => {
   try {
-    const [ubicaciones] = await db.query("SELECT * FROM ubicacion");
-    res.status(200).json(ubicaciones);
+    const { data, error } = await supabase.from("ubicacion").select("*");
+
+    if (error) throw error;
+    res.status(200).json(data);
   } catch (err) {
-    console.error("Error al obtener ubicaciones:", err);
+    console.error("❌ Error al obtener ubicaciones:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -40,19 +45,19 @@ exports.obtenerUbicaciones = async (req, res) => {
 exports.obtenerUbicacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
+    const { data, error } = await supabase
+      .from("ubicacion")
+      .select("*")
+      .eq("id_ubicacion", id)
+      .single();
 
-    const [ubicacion] = await db.query(
-      "SELECT * FROM ubicacion WHERE id_ubicacion = ?",
-      [id]
-    );
-
-    if (ubicacion.length === 0) {
+    if (error) throw error;
+    if (!data)
       return res.status(404).json({ error: "Ubicación no encontrada" });
-    }
 
-    res.status(200).json(ubicacion[0]);
+    res.status(200).json(data);
   } catch (err) {
-    console.error("Error al obtener ubicación por ID:", err);
+    console.error("❌ Error al obtener ubicación por ID:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -64,23 +69,32 @@ exports.actualizarUbicacion = async (req, res) => {
     const { nombre, latitud, longitud, descripcion } = req.body;
 
     // Verificar si la ubicación existe
-    const [ubicacion] = await db.query(
-      "SELECT * FROM ubicacion WHERE id_ubicacion = ?",
-      [id]
-    );
-    if (ubicacion.length === 0) {
+    const { data: ubicacionExistente, error: errorExistencia } = await supabase
+      .from("ubicacion")
+      .select("id_ubicacion")
+      .eq("id_ubicacion", id)
+      .single();
+
+    if (errorExistencia) throw errorExistencia;
+    if (!ubicacionExistente)
       return res.status(404).json({ error: "Ubicación no encontrada" });
-    }
 
     // Actualizar la ubicación
-    await db.query(
-      "UPDATE ubicacion SET nombre = ?, latitud = ?, longitud = ?, descripcion = ? WHERE id_ubicacion = ?",
-      [nombre, latitud, longitud, descripcion, id]
-    );
+    const { error } = await supabase
+      .from("ubicacion")
+      .update({
+        nombre,
+        latitud,
+        longitud,
+        descripcion,
+      })
+      .eq("id_ubicacion", id);
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Ubicación actualizada" });
   } catch (err) {
-    console.error("Error al actualizar ubicación:", err);
+    console.error("❌ Error al actualizar ubicación:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -91,20 +105,27 @@ exports.eliminarUbicacion = async (req, res) => {
     const { id } = req.params;
 
     // Verificar si la ubicación existe
-    const [ubicacion] = await db.query(
-      "SELECT * FROM ubicacion WHERE id_ubicacion = ?",
-      [id]
-    );
-    if (ubicacion.length === 0) {
+    const { data: ubicacionExistente, error: errorExistencia } = await supabase
+      .from("ubicacion")
+      .select("id_ubicacion")
+      .eq("id_ubicacion", id)
+      .single();
+
+    if (errorExistencia) throw errorExistencia;
+    if (!ubicacionExistente)
       return res.status(404).json({ error: "Ubicación no encontrada" });
-    }
 
     // Eliminar la ubicación
-    await db.query("DELETE FROM ubicacion WHERE id_ubicacion = ?", [id]);
+    const { error } = await supabase
+      .from("ubicacion")
+      .delete()
+      .eq("id_ubicacion", id);
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Ubicación eliminada" });
   } catch (err) {
-    console.error("Error al eliminar ubicación:", err);
+    console.error("❌ Error al eliminar ubicación:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };

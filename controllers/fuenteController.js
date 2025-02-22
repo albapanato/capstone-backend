@@ -1,4 +1,4 @@
-const db = require("../models/db");
+const { supabase } = require("../models/db");
 
 exports.crearFuente = async (req, res) => {
   try {
@@ -14,74 +14,110 @@ exports.crearFuente = async (req, res) => {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    const [result] = await db.query(
-      "INSERT INTO fuente_documental (descripcion_medio, autor_medio, fecha_publicacion, url, fk_verificador) VALUES (?, ?, ?, ?, ?)",
-      [descripcion_medio, autor_medio, fecha_publicacion, url, fk_verificador]
-    );
+    const { data, error } = await supabase
+      .from("fuente_documental")
+      .insert([
+        {
+          descripcion_medio,
+          autor_medio,
+          fecha_publicacion,
+          url,
+          fk_verificador,
+        },
+      ])
+      .select("id_fuente_documental");
 
-    res
-      .status(201)
-      .json({ message: "Fuente creada", id_fuente: result.insertId, ok: true });
+    if (error) throw error;
+
+    res.status(201).json({
+      message: "Fuente creada",
+      id_fuente_documental: data[0].id_fuente_documental,
+      ok: true,
+    });
   } catch (err) {
+    console.error("❌ Error al crear fuente:", err);
     res.status(500).json({ error: "Error en la BD" });
   }
 };
 
-exports.obtenerFuentes = (req, res) => {
-  db.query("SELECT * FROM fuente_documental", (err, results) => {
-    if (err) return res.status(500).json({ error: "Error en la BD" });
-    res.json(results);
-  });
+exports.obtenerFuentes = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("fuente_documental")
+      .select("*");
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error al obtener fuentes:", err);
+    res.status(500).json({ error: "Error en la BD" });
+  }
 };
 
-exports.obtenerFuentePorId = (req, res) => {
-  const id = req.params.id;
-  db.query(
-    "SELECT * FROM fuente_documental WHERE id_fuente = ?",
-    [id],
-    (err, results) => {
-      if (err) return res.status(500).json({ error: "Error en la BD" });
-      if (results.length === 0)
-        return res.status(404).json({ error: "Fuente no encontrada" });
-      res.json(results[0]);
-    }
-  );
+exports.obtenerFuentePorId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from("fuente_documental")
+      .select("*")
+      .eq("id_fuente", id)
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: "Fuente no encontrada" });
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error al obtener fuente por ID:", err);
+    res.status(500).json({ error: "Error en la BD" });
+  }
 };
 
-exports.actualizarFuente = (req, res) => {
-  const id = req.params.id;
-  const {
-    descripcion_medio,
-    autor_medio,
-    fecha_publicacion,
-    url,
-    fk_verificador,
-  } = req.body;
-  db.query(
-    "UPDATE fuente_documental SET descripcion_medio=?, autor_medio=?, fecha_publicacion=?, url=?, fk_verificador=? WHERE id_fuente=?",
-    [
+exports.actualizarFuente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
       descripcion_medio,
       autor_medio,
       fecha_publicacion,
       url,
       fk_verificador,
-      id,
-    ],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: "Error en la BD" });
-      res.status(202).json({ message: "Fuente actualizada" });
-    }
-  );
+    } = req.body;
+
+    const { error } = await supabase
+      .from("fuente_documental")
+      .update({
+        descripcion_medio,
+        autor_medio,
+        fecha_publicacion,
+        url,
+        fk_verificador,
+      })
+      .eq("id_fuente_documental", id);
+
+    if (error) throw error;
+
+    res.status(202).json({ message: "Fuente actualizada" });
+  } catch (err) {
+    console.error("❌ Error al actualizar fuente:", err);
+    res.status(500).json({ error: "Error en la BD" });
+  }
 };
 
-exports.eliminarFuente = (req, res) => {
-  const id = req.params.id;
-  db.query(
-    "DELETE FROM fuente_documental WHERE id_fuente = ?",
-    [id],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: "Error en la BD" });
-      res.status(202).json({ message: "Fuente eliminada" });
-    }
-  );
+exports.eliminarFuente = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("fuente_documental")
+      .delete()
+      .eq("id_fuente_documental", id);
+
+    if (error) throw error;
+
+    res.status(202).json({ message: "Fuente eliminada" });
+  } catch (err) {
+    console.error("❌ Error al eliminar fuente:", err);
+    res.status(500).json({ error: "Error en la BD" });
+  }
 };

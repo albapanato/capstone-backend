@@ -1,5 +1,6 @@
-const db = require("../models/db");
+const { supabase } = require("../models/db");
 
+// 1. Crear una nueva víctima
 exports.crearVictima = async (req, res) => {
   try {
     const { estado, apellidos, nombre, DNI, sexo, telefono, movil, email } =
@@ -9,27 +10,35 @@ exports.crearVictima = async (req, res) => {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    const [result] = await db.query(
-      "INSERT INTO victima (estado, apellidos, nombre, DNI, sexo, telefono, movil, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [estado, apellidos, nombre, DNI, sexo, telefono, movil, email]
-    );
+    const { data, error } = await supabase
+      .from("victima")
+      .insert([
+        { estado, apellidos, nombre, dni: DNI, sexo, telefono, movil, email },
+      ])
+      .select("id_victima");
+
+    if (error) throw error;
 
     res.status(201).json({
       message: "Víctima creada",
-      id_victima: result.insertId,
+      id_victima: data[0].id_victima,
       ok: true,
     });
   } catch (err) {
-    res.status(500).json({ error: "Error en la BD" });
+    console.error("❌ Error al crear víctima:", err);
+    res.status(500).json({ error: "Error en la base de datos" });
   }
 };
+
 // 2. Obtener todas las víctimas
 exports.obtenerVictimas = async (req, res) => {
   try {
-    const [victimas] = await db.query("SELECT * FROM victima");
-    res.status(200).json(victimas);
+    const { data, error } = await supabase.from("victima").select("*");
+
+    if (error) throw error;
+    res.status(200).json(data);
   } catch (err) {
-    console.error("Error al obtener víctimas:", err);
+    console.error("❌ Error al obtener víctimas:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -38,19 +47,18 @@ exports.obtenerVictimas = async (req, res) => {
 exports.obtenerVictimaPorId = async (req, res) => {
   try {
     const { id } = req.params;
+    const { data, error } = await supabase
+      .from("victima")
+      .select("*")
+      .eq("id_victima", id)
+      .single();
 
-    const [victima] = await db.query(
-      "SELECT * FROM victima WHERE id_victima = ?",
-      [id]
-    );
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: "Víctima no encontrada" });
 
-    if (victima.length === 0) {
-      return res.status(404).json({ error: "Víctima no encontrada" });
-    }
-
-    res.status(200).json(victima[0]);
+    res.status(200).json(data);
   } catch (err) {
-    console.error("Error al obtener víctima por ID:", err);
+    console.error("❌ Error al obtener víctima por ID:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -63,23 +71,36 @@ exports.actualizarVictima = async (req, res) => {
       req.body;
 
     // Verificar si la víctima existe
-    const [victima] = await db.query(
-      "SELECT * FROM victima WHERE id_victima = ?",
-      [id]
-    );
-    if (victima.length === 0) {
+    const { data: victimaExistente, error: errorExistencia } = await supabase
+      .from("victima")
+      .select("id_victima")
+      .eq("id_victima", id)
+      .single();
+
+    if (errorExistencia) throw errorExistencia;
+    if (!victimaExistente)
       return res.status(404).json({ error: "Víctima no encontrada" });
-    }
 
     // Actualizar la víctima
-    await db.query(
-      "UPDATE victima SET estado = ?, apellidos = ?, nombre = ?, DNI = ?, sexo = ?, telefono = ?, movil = ?, email = ? WHERE id_victima = ?",
-      [estado, apellidos, nombre, DNI, sexo, telefono, movil, email, id]
-    );
+    const { error } = await supabase
+      .from("victima")
+      .update({
+        estado,
+        apellidos,
+        nombre,
+        dni: DNI,
+        sexo,
+        telefono,
+        movil,
+        email,
+      })
+      .eq("id_victima", id);
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Víctima actualizada" });
   } catch (err) {
-    console.error("Error al actualizar víctima:", err);
+    console.error("❌ Error al actualizar víctima:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };
@@ -90,20 +111,27 @@ exports.eliminarVictima = async (req, res) => {
     const { id } = req.params;
 
     // Verificar si la víctima existe
-    const [victima] = await db.query(
-      "SELECT * FROM victima WHERE id_victima = ?",
-      [id]
-    );
-    if (victima.length === 0) {
+    const { data: victimaExistente, error: errorExistencia } = await supabase
+      .from("victima")
+      .select("id_victima")
+      .eq("id_victima", id)
+      .single();
+
+    if (errorExistencia) throw errorExistencia;
+    if (!victimaExistente)
       return res.status(404).json({ error: "Víctima no encontrada" });
-    }
 
     // Eliminar la víctima
-    await db.query("DELETE FROM victima WHERE id_victima = ?", [id]);
+    const { error } = await supabase
+      .from("victima")
+      .delete()
+      .eq("id_victima", id);
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Víctima eliminada" });
   } catch (err) {
-    console.error("Error al eliminar víctima:", err);
+    console.error("❌ Error al eliminar víctima:", err);
     res.status(500).json({ error: "Error en la base de datos" });
   }
 };

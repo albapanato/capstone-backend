@@ -1,24 +1,30 @@
-const mysql = require("mysql2");
+const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
-// Configuración del pool de conexiones
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+// Crear cliente de Supabase
+const supabase = createClient(
+  process.env.DATABASE_SUPABASE_URL,
+  process.env.DATABASE_SUPABASE_SERVICE_ROLE_KEY // Usa la clave de servicio para acceso total
+);
 
-process.on("SIGINT", () => {
-  pool.end((err) => {
-    if (err) console.error("Error al cerrar la conexión:", err);
-    console.log("Conexión a MySQL cerrada correctamente");
-    process.exit(0);
+/**
+ * Función para realizar consultas genéricas a la base de datos
+ * @param {string} table - Nombre de la tabla
+ * @param {Array} columns - Columnas a seleccionar (ej: ["id", "name"])
+ * @param {Object} filters - Objeto con las condiciones (ej: { id: 1 })
+ * @returns {Promise<{ data: any, error: any }>}
+ */
+const query = async (table, columns = ["*"], filters = {}) => {
+  let query = supabase.from(table).select(columns.join(","));
+
+  // Aplicar filtros dinámicamente
+  Object.keys(filters).forEach((key) => {
+    query = query.eq(key, filters[key]);
   });
-});
 
-module.exports = pool.promise();
+  const { data, error } = await query;
+  return { data, error };
+};
+
+// Exportar Supabase y la función de consulta
+module.exports = { supabase, query };
