@@ -5,7 +5,7 @@ const app = express();
 
 // Middleware de timeout (se coloca antes de definir rutas)
 app.use((req, res, next) => {
-  res.setTimeout(10000, () => {
+  res.setTimeout(100000, () => {
     // 10 segundos
     res.status(504).json({ error: "Request timeout" });
   });
