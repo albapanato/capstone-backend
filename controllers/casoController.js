@@ -150,19 +150,16 @@ exports.obtenerCasoPorId = async (req, res) => {
 };
 
 //funciona
-const db = require("../models/db");
-
 exports.obtenerTodosCasos = async (req, res) => {
   let connection;
   try {
-    connection = await db(); // ✅ Obtener conexión
+    connection = await db.getConnection();
     const [casos] = await connection.query("SELECT * FROM caso");
     res.json(casos);
   } catch (err) {
-    console.error("❌ Error en la BD:", err);
     res.status(500).json({ error: "Error en la BD" });
   } finally {
-    if (connection) await connection.end(); // ✅ Cierra la conexión en entornos Serverless
+    if (connection) connection.release();
   }
 };
 
