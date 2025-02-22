@@ -3,17 +3,15 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
-// // Middleware de timeout (se coloca antes de definir rutas)
-// app.use((req, res, next) => {
-//   res.setTimeout(100000, () => {
-//     // 100 segundos
-//     res.status(504).json({ error: "Request timeout" });
-//   });
-//   next();
-// });
+const corsOptions = {
+  origin: ["https://gemapp.es", "http://localhost:3000"],
+  methods: "GET,POST,PUT,DELETE",
+  credentials: true,
+};
 
-// Middlewares generales
-app.use(cors());
+app.use(cors(corsOptions));
+app.options("*", cors());
+
 app.use(express.json());
 
 // Importar rutas
@@ -37,14 +35,13 @@ app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada" });
 });
 
-// Puerto
-// const PORT = process.env.PORT || 5002;
-// app.listen(PORT, "0.0.0.0", () => {
-//   console.log(`✅ Servidor corriendo en http://0.0.0.0:${PORT}`);
-// });
-
-app.get("/", (req, res) => {
-  res.send("API funcionando en Vercel 🚀");
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Servidor corriendo en http://0.0.0.0:${PORT}`);
 });
 
-module.exports = app;
+// app.get("/", (req, res) => {
+//   res.send("API funcionando en Vercel");
+// });
+
+// module.exports = app;

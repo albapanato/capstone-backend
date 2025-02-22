@@ -10,8 +10,7 @@ exports.crearFuente = async (req, res) => {
       fk_verificador,
     } = req.body;
 
-    if (!descripcion_medio) {
-      // Solo validar descripcion_medio como campo obligatorio
+    if (!descripcion_medio || !fecha_publicacion) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
@@ -22,7 +21,7 @@ exports.crearFuente = async (req, res) => {
 
     res
       .status(201)
-      .json({ message: "Fuente creada", id_fuente: result.insertId });
+      .json({ message: "Fuente creada", id_fuente: result.insertId, ok: true });
   } catch (err) {
     res.status(500).json({ error: "Error en la BD" });
   }
