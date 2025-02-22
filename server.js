@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 
 const corsOptions = {
-  origin: ["https://gemapp.es", "http://localhost:3000"],
+  origin: ["https://gemapp-frontend.vercel.app", "http://localhost:3000"],
   methods: "GET,POST,PUT,DELETE",
   credentials: true,
 };
