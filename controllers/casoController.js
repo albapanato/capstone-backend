@@ -150,18 +150,22 @@ exports.obtenerCasoPorId = async (req, res) => {
 };
 
 //funciona
+const db = require("../models/db");
+
 exports.obtenerTodosCasos = async (req, res) => {
   let connection;
   try {
-    connection = await db.getConnection();
+    connection = await db(); // ✅ Obtener conexión
     const [casos] = await connection.query("SELECT * FROM caso");
     res.json(casos);
   } catch (err) {
+    console.error("❌ Error en la BD:", err);
     res.status(500).json({ error: "Error en la BD" });
   } finally {
-    if (connection) connection.release();
+    if (connection) await connection.end(); // ✅ Cierra la conexión en entornos Serverless
   }
 };
+
 exports.obtenerCasosVerificadosDeUnVerificador = async (req, res) => {
   try {
     const { id_verificador } = req.params; // 🟢 Obtenemos el ID desde la URL
