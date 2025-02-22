@@ -13,4 +13,12 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+process.on("SIGINT", () => {
+  pool.end((err) => {
+    if (err) console.error("Error al cerrar la conexión:", err);
+    console.log("Conexión a MySQL cerrada correctamente");
+    process.exit(0);
+  });
+});
+
 module.exports = pool.promise();
